@@ -9,10 +9,10 @@ function Header() {
     <View style={styles.header}>
       <Text style={styles.header__left}>WhatsApp</Text>
       <View style={styles.header__right}>
-        <TouchableHighlight onPress={() => console.log("Serach me")}>
+        <TouchableHighlight>
           <Ionicons name="ios-search" size={24} color="white" style={styles.header__rightIcon} />
         </TouchableHighlight>
-        <TouchableHighlight onPress={() => console.log("Three dots")}>
+        <TouchableHighlight>
           <Ionicons name="md-more" size={24} color="white" style={styles.header__rightIcon, {marginRight: 5}} />
         </TouchableHighlight>
       </View>
@@ -41,7 +41,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header__rightIcon: {
-    // paddingLeft: 25,
     marginRight: 25,
   }
 })
