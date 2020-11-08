@@ -5,7 +5,6 @@ import { Ionicons, AntDesign, FontAwesome } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 
-import Header from './Components/Header'
 import SigninScreen from './Components/Signin'
 import SignupScreen from './Components/Signup'
 
@@ -35,14 +34,24 @@ export default function App() {
         //uer logged out
         setUser(null)
       }
+      if (isLoading) {
+        setIsLoading(false)
+      }
     })
   },[])
 
-  useEffect(() => {
-    if (isLoading) {
-      setIsLoading(false)
-    }
-  },[user])
+  const getTabBarVisibility = (route) => {
+  const routeName = route.state
+    ? route.state.routes[route.state.index].name
+    : '';
+
+  if (routeName === 'Chats') {
+    return true;
+  }
+
+  return false;
+}
+
 
   if(isLoading){
     return (
@@ -95,13 +104,12 @@ export default function App() {
         </View>
       ) : (
         <View style={{ flex: 1 }}>
-        <Header />
-        {/* EVRYTHING IS TEMPORARY TILL NEXT COMMENT*/}
+        {/* EVRYTHING IS TEMPORARY TILL NEXT COMMENT
         <Button
           title="SignOut"
           onPress={() => auth.signOut()}
         />
-        {/* EVRYTHING IS TEMPORARY TILL thIS COMMENT*/}
+         EVRYTHING IS TEMPORARY TILL thIS COMMENT*/}
         <NavigationContainer>
         <Tab.Navigator
         screenOptions={({ route }) => ({
@@ -128,7 +136,7 @@ export default function App() {
           inactiveTintColor: 'black',
         }}
         >
-        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Home" component={HomeScreen} options={({ route }) => ({tabBarVisible: getTabBarVisibility(route)})}/>
         <Tab.Screen name="Status" component={SettingsScreen} />
         <Tab.Screen name="Calls" component={ChatScreen} />
         {/* If you add here then also add in above icon function.....*/}

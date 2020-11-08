@@ -1,6 +1,6 @@
 import React,{ useState, useEffect } from 'react'
 import { Text, View, Button, StatusBar, ScrollView, StyleSheet, Image, TouchableOpacity } from 'react-native';
-
+import Header from '../Components/Header'
 
 
 function ChatScreen({ navigation }) {
@@ -33,7 +33,7 @@ function ChatScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1 }}>
-
+    <Header />
       <ScrollView style={{ flex: 1}}>
         {
           chats.map((chat) => (

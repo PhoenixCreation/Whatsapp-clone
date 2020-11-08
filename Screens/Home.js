@@ -10,6 +10,7 @@ import ChatRoomScreen from '../Screens/ChatRoom'
 const Tab = createBottomTabNavigator();
 
 function HomeScreen({ navigation }) {
+
   return (
     <Tab.Navigator>
       <Tab.Screen name="Chats" component={ChatScreen} options={{tabBarVisible: false}} />
