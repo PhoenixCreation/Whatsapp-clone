@@ -45,11 +45,11 @@ export default function App() {
     ? route.state.routes[route.state.index].name
     : '';
 
-  if (routeName === 'Chats') {
-    return true;
+  if (routeName === 'ChatRoom') {
+    return false;
   }
 
-  return false;
+  return true;
 }
 
 

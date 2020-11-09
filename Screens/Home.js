@@ -12,8 +12,13 @@ const Tab = createBottomTabNavigator();
 function HomeScreen({ navigation }) {
 
   return (
-    <Tab.Navigator>
-      <Tab.Screen name="Chats" component={ChatScreen} options={{tabBarVisible: false}} />
+    <Tab.Navigator
+    initialRouteName="Chats"
+    tabBarOptions={{
+      showLabel: false
+    }}
+    >
+      <Tab.Screen name="Chats" component={ChatScreen}  options={{tabBarVisible: false}}/>
       <Tab.Screen name="ChatRoom" component={ChatRoomScreen} options={{tabBarVisible: false}} />
     </Tab.Navigator>
   );

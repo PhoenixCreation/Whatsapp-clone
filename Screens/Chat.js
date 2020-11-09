@@ -1,12 +1,15 @@
 import React,{ useState, useEffect } from 'react'
-import { Text, View, Button, StatusBar, ScrollView, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Text, View, Button, StatusBar, ScrollView, StyleSheet, Image, TouchableOpacity, Modal } from 'react-native';
 import Header from '../Components/Header'
+import ProfileInfo from '../Components/ProfileInfo'
 
 
 function ChatScreen({ navigation }) {
   const [chats,setChats] = useState([]);
-  const avatarURLtemp = "https://phoenixcreation2.herokuapp.com/static/logomain.png"
-  // const avatarURLtemp = "https://source.unsplash.com/random/"
+  const [showAvatarBox,setShowAvatarBox] = useState(false)
+  const [avatarURL, setAvatarURl] = useState("")
+  // const avatarURLtemp = "https://phoenixcreation2.herokuapp.com/static/logomain.png"
+  const avatarURLtemp = "https://source.unsplash.com/random/"
 
 
 
@@ -29,11 +32,32 @@ function ChatScreen({ navigation }) {
 
   },[])
 
+  const showAvatar = (url) => {
+    setAvatarURl(url)
+    setShowAvatarBox(true)
+  }
 
 
   return (
     <View style={{ flex: 1 }}>
     <Header />
+    <Modal
+      animationType="fade"
+      visible={showAvatarBox}
+      transparent={true}
+      onRequestClose={() => {
+        setShowAvatarBox(false)
+      }}
+    >
+    <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1}}>
+    <TouchableOpacity
+      onPress={() => setShowAvatarBox(false)}
+      style={{ position: 'absolute', top: 0,left: 0,right:0,bottom:0, backgroundColor: '#00000066'}}
+    >
+    </TouchableOpacity>
+    <ProfileInfo url={avatarURL} />
+    </View>
+    </Modal>
       <ScrollView style={{ flex: 1}}>
         {
           chats.map((chat) => (
@@ -42,12 +66,14 @@ function ChatScreen({ navigation }) {
               username: chat.username
             })}>
             <View style={styles.chat}>
-              <Image
-                style={styles.chat__avatar}
-                source={{
-                  uri: chat.avatarURL,
-                }}
-              />
+              <TouchableOpacity onPress={() => showAvatar(chat.avatarURL)}>
+                <Image
+                  style={styles.chat__avatar}
+                  source={{
+                    uri: chat.avatarURL,
+                  }}
+                />
+              </TouchableOpacity>
               <View style={{ flex: 1, flexDirection: 'column', padding: 5, paddingLeft: 10, paddingRight: 10}}>
                 <View style={styles.chat__heading}>
                   <Text style={{ fontWeight: 'bold', fontSize: 17 }}>{chat.username}</Text>
