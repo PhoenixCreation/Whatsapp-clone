@@ -1,15 +1,15 @@
 import React from 'react'
-import { Text, View, Button, StatusBar, StyleSheet, TouchableHighlight, Image } from 'react-native';
+import { Text, View, Button, StatusBar, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-function ChatHeader({name, lastseen, avatarURL}) {
+function ChatHeader({name, lastseen, avatarURL, navigation}) {
   StatusBar.setBackgroundColor("#054c44",true)
 
   return (
     <View style={styles.header}>
-      <TouchableHighlight>
+      <TouchableOpacity onPress={() => navigation.goBack()}>
         <Ionicons name="ios-arrow-round-back" size={30} color="white" style={{marginRight: 10,alignSelf: 'center'}} />
-      </TouchableHighlight>
+      </TouchableOpacity>
       <View style={{flex: 1, flexDirection: "row"}}>
         <Image
           style={styles.chat__avatar}
@@ -23,15 +23,15 @@ function ChatHeader({name, lastseen, avatarURL}) {
         </View>
       </View>
       <View style={styles.header__right}>
-        <TouchableHighlight>
+        <TouchableOpacity>
           <Ionicons name="md-videocam" size={24} color="white" style={styles.header__rightIcon} />
-        </TouchableHighlight>
-        <TouchableHighlight>
+        </TouchableOpacity>
+        <TouchableOpacity>
           <Ionicons name="md-call" size={24} color="white" style={styles.header__rightIcon} />
-        </TouchableHighlight>
-        <TouchableHighlight>
+        </TouchableOpacity>
+        <TouchableOpacity>
           <Ionicons name="md-more" size={24} color="white" style={styles.header__rightIcon, {marginRight: 5}} />
-        </TouchableHighlight>
+        </TouchableOpacity>
       </View>
     </View>
   );

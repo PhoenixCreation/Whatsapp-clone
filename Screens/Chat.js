@@ -49,14 +49,14 @@ function ChatScreen({ navigation }) {
         setShowAvatarBox(false)
       }}
     >
-    <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1}}>
-    <TouchableOpacity
-      onPress={() => setShowAvatarBox(false)}
-      style={{ position: 'absolute', top: 0,left: 0,right:0,bottom:0, backgroundColor: '#00000066'}}
-    >
-    </TouchableOpacity>
-    <ProfileInfo url={avatarURL} />
-    </View>
+      <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1}}>
+        <TouchableOpacity
+          onPress={() => setShowAvatarBox(false)}
+          style={{ position: 'absolute', top: 0,left: 0,right:0,bottom:0, backgroundColor: '#00000066'}}
+        >
+        </TouchableOpacity>
+        <ProfileInfo url={avatarURL} />
+      </View>
     </Modal>
       <ScrollView style={{ flex: 1}}>
         {
