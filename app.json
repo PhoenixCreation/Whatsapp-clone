@@ -22,6 +22,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.phoenix.whatsapp",
+      "versionCode": 1,
       "useNextNotificationsApi": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

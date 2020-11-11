@@ -1,6 +1,6 @@
 import React,{ useEffect, useState} from 'react'
 import { Text, View, Button, StyleSheet, TextInput, ToastAndroid } from 'react-native';
-import { auth } from '../firebase'
+import { auth } from '../firebaseWrap'
 
 
 function SigninScreen({ navigation }) {

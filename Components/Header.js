@@ -1,6 +1,8 @@
 import React from 'react'
 import { Text, View, Button, StatusBar, StyleSheet, TouchableHighlight } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { auth } from '../firebaseWrap'
+
 
 function Header() {
   StatusBar.setBackgroundColor("#075e55",true)
@@ -9,7 +11,7 @@ function Header() {
     <View style={styles.header}>
       <Text style={styles.header__left}>WhatsApp</Text>
       <View style={styles.header__right}>
-        <TouchableHighlight>
+        <TouchableHighlight onPress={() => auth.signOut()}>
           <Ionicons name="ios-search" size={24} color="white" style={styles.header__rightIcon} />
         </TouchableHighlight>
         <TouchableHighlight>
