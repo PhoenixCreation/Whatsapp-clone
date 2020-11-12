@@ -28,6 +28,7 @@ export default function App() {
     auth.onAuthStateChanged((authuser) => {
       if(authuser){
         // user logged in
+        console.log(authuser.email);
         setUser(authuser)
       }
       else{

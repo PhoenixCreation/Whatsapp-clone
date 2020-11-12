@@ -1,5 +1,6 @@
 import React,{ useState, useEffect } from 'react'
 import { Text, View, Button, StatusBar, ScrollView, StyleSheet, Image, TouchableOpacity, Modal } from 'react-native';
+import { db, auth } from "../firebaseWrap"
 import Header from '../Components/Header'
 import ProfileInfo from '../Components/ProfileInfo'
 
@@ -8,20 +9,29 @@ function ChatScreen({ navigation }) {
   const [chats,setChats] = useState([]);
   const [showAvatarBox,setShowAvatarBox] = useState(false)
   const [avatarURL, setAvatarURl] = useState("")
+  const [usersInfo,setUsersInfo] = useState([])
   // const avatarURLtemp = "https://phoenixcreation2.herokuapp.com/static/logomain.png"
   const avatarURLtemp = "https://source.unsplash.com/random/"
 
+  useEffect(() => {
+    db.collection('userinfo').get().then((users) => {
+      users.forEach((user, i) => {
+        let dt = user.data()
+        setUsersInfo((prev) => [...prev,{username: dt.username, avatarURL: dt.avatarURL}])
+      });
 
+    })
+  },[])
 
   useEffect(() => {
     let tempchats = [];
     const last_ticks = ["","✔️","Ld_Gaurav"]
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 1; i++) {
       tempchats.push({
         ukey: i,
         type: "personal",
         avatarURL: avatarURLtemp,
-        username: "WhatsApp User",
+        username: "Test User",
         last_chat_time: "1:22 pm",
         last_tick: last_ticks[Math.floor((Math.random() * 3))],
         last_message: "This are some random text message from me",
@@ -30,6 +40,41 @@ function ChatScreen({ navigation }) {
     }
     setChats(tempchats);
 
+  },[])
+
+  useEffect(() => {
+    let name = auth.currentUser.displayName
+    if(!name) {
+      name = "Zeel"
+    }
+    db.collection('chats').doc(name).onSnapshot((doc) => {
+      setChats([])
+      let chatinfo = doc.data()
+      for( var chatheads in chatinfo){
+        let temp = {}
+        db.collection('userinfo').doc(chatheads).get().then((chatheadInfo) => {
+          temp.avatarURL = chatheadInfo.data().avatarURL
+        })
+        temp.ukey = name+chatheads
+        temp.username = chatheads
+        var arrayOfChat = chatinfo[chatheads]
+        arrayOfChat.sort(function(a,b){
+          return a.time - b.time
+        })
+        arrayOfChat.reverse()
+        temp.last_message = arrayOfChat[0].text
+        temp.last_tick = arrayOfChat[0].seen
+        temp.last_message_type = arrayOfChat[0].type
+        temp.last_chat_time = arrayOfChat[0].time
+        temp.unread_count = 0
+        for (var i = 0; i < usersInfo.length; i++) {
+          if (usersInfo[i].username === chatheads) {
+            temp.avatarURL = usersInfo[i].avatarURL
+          }
+        }
+        setChats((prevChats) => [...prevChats,temp])
+      }
+    })
   },[])
 
   const showAvatar = (url) => {
@@ -41,6 +86,7 @@ function ChatScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
     <Header />
+    <Text>{auth.currentUser.email}</Text>
     <Modal
       animationType="fade"
       visible={showAvatarBox}
@@ -60,13 +106,14 @@ function ChatScreen({ navigation }) {
     </Modal>
       <ScrollView style={{ flex: 1}}>
         {
-          chats.map((chat) => (
-            <TouchableOpacity key={chat.ukey} onPress={() => navigation.navigate('ChatRoom',{
+          chats.map((chat,i) => (
+            <TouchableOpacity key={i} onPress={() => navigation.navigate('ChatRoom',{
               roomID: chat.ukey,
-              username: chat.username
+              username: chat.username,
+              avatarURL: chat.avatarURL
             })}>
             <View style={styles.chat}>
-              <TouchableOpacity onPress={() => showAvatar(chat.avatarURL)}>
+               <TouchableOpacity onPress={() => showAvatar(chat.avatarURL)}>
                 <Image
                   style={styles.chat__avatar}
                   source={{
@@ -77,7 +124,7 @@ function ChatScreen({ navigation }) {
               <View style={{ flex: 1, flexDirection: 'column', padding: 5, paddingLeft: 10, paddingRight: 10}}>
                 <View style={styles.chat__heading}>
                   <Text style={{ fontWeight: 'bold', fontSize: 17 }}>{chat.username}</Text>
-                  <Text style={{ fontSize: 11, color: 'grey'}}>{chat.last_chat_time}</Text>
+                  {/*<Text style={{ fontSize: 11, color: 'grey'}}>{chat.last_chat_time}</Text> */}
                 </View>
                 <View style={styles.chat__footer}>
                   {

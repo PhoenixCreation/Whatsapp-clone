@@ -1,6 +1,8 @@
 import React, { useState,useEffect} from 'react'
+import firebase from 'firebase'
 import { Text, View, Button, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal} from 'react-native';
 import ChatHeader from '../Components/ChatHeader'
+import { db, auth } from "../firebaseWrap"
 import { FontAwesome,Entypo,MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 
@@ -10,7 +12,7 @@ function ChatRoomScreen({ route, navigation }) {
 
 
 
-  const avatarURLtemp = "https://phoenixcreation2.herokuapp.com/static/logomain.png"
+  // const avatarURLtemp = "https://phoenixcreation2.herokuapp.com/static/logomain.png"
 
   const [messages,setMessages] = useState([]);
   const [msg,setMsg] = useState("");
@@ -53,6 +55,45 @@ function ChatRoomScreen({ route, navigation }) {
     }
   },[])
 
+  const sendMsg = () => {
+    if(!cameraVisible){
+      //send message.....
+      // TODO: 1. append message to self 2. append message to reciever
+      // 1. append message to self
+      let sender = auth.currentUser.displayName
+      if(!sender){
+        sender = "Zeel"
+      }
+      let reciever = route.params.username
+      db.collection('chats').doc(sender).update({
+        [reciever]: firebase.firestore.FieldValue.arrayUnion({
+          time: new Date().toUTCString(),
+          uid: sender + "_" + reciever + "_" + Math.floor(Math.random() * 100000 + 1),
+          attachment: "",
+          sender: sender,
+          reciever: reciever,
+          type: "text",
+          text: msg,
+          seen: "✔️",
+        })
+      })
+      // 2. append message to reciever
+      db.collection('chats').doc(reciever).update({
+          [sender]: firebase.firestore.FieldValue.arrayUnion({
+          time: new Date().toUTCString(),
+          uid: sender + "_" + reciever + "_" + Math.floor(Math.random() * 100000 + 1),
+          attachment: "",
+          sender: sender,
+          reciever: reciever,
+          type: "text",
+          text: msg,
+          seen: "✔️",
+      })
+
+    })
+  }
+}
+
   const renderMSG = (message) => {
     scrollview.current.scrollToEnd({ animated: false})
 
@@ -82,7 +123,7 @@ function ChatRoomScreen({ route, navigation }) {
   return (
     <View style={{ flex: 1, backgroundColor: "#eee5dd" }}>
 
-      <ChatHeader name={route.params.username} lastseen="two days ago" avatarURL={avatarURLtemp} navigation={navigation}/>
+      <ChatHeader name={route.params.username} lastseen="two days ago" avatarURL={route.params.avatarURL} navigation={navigation}/>
       <ScrollView ref={scrollview}>
         {
           messages.map((message) => (
@@ -131,7 +172,7 @@ function ChatRoomScreen({ route, navigation }) {
           </TouchableOpacity>}
         </View>
         <View style={styles.msg__senderVoice}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={sendMsg}>
           {
             cameraVisible ? (
               <Entypo name="mic" size={24} color="white" style={{alignSelf: 'center'}} />

@@ -116,6 +116,7 @@ function SignupScreen({ navigation }) {
                   chats: [],
                   notification_token: ntoken,
                 })
+                // TODO: Add a chat doc here... Initialize it for the user....
 
               })
 

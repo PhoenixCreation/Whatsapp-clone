@@ -16,6 +16,7 @@ function SigninScreen({ navigation }) {
       ToastAndroid.show("Signinng in.....", ToastAndroid.SHORT)
       auth.signInWithEmailAndPassword(email,password)
         .catch(function(error){
+          console.log(error);
           ToastAndroid.show("something went wrong..", ToastAndroid.SHORT)
         })
     }
