@@ -1,11 +1,18 @@
-import React,{ useState, useEffect } from 'react'
-import { Text, View, Button, StatusBar, ScrollView, StyleSheet, Image, TouchableOpacity, Modal } from 'react-native';
+import React,{ useState, useEffect, useContext } from 'react'
+import { Text, View, Button, StatusBar, ScrollView, StyleSheet, Image, TouchableOpacity, Modal, ToastAndroid } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
 import { db, auth } from "../firebaseWrap"
 import Header from '../Components/Header'
 import ProfileInfo from '../Components/ProfileInfo'
 
+import { ChatContext } from '../stateManager'
+
 
 function ChatScreen({ navigation }) {
+
+  const [wholeChats,setWholeChats] = useContext(ChatContext)
+
   const [chats,setChats] = useState([]);
   const [showAvatarBox,setShowAvatarBox] = useState(false)
   const [avatarURL, setAvatarURl] = useState("")
@@ -26,7 +33,7 @@ function ChatScreen({ navigation }) {
   useEffect(() => {
     let tempchats = [];
     const last_ticks = ["","✔️","Ld_Gaurav"]
-    for (var i = 0; i < 1; i++) {
+    for (var i = 0; i < 5; i++) {
       tempchats.push({
         ukey: i,
         type: "personal",
@@ -43,49 +50,55 @@ function ChatScreen({ navigation }) {
   },[])
 
   useEffect(() => {
+    setChats([])
     let name = auth.currentUser.displayName
-    if(!name) {
-      name = "Zeel"
-    }
-    db.collection('chats').doc(name).onSnapshot((doc) => {
-      setChats([])
-      let chatinfo = doc.data()
-      for( var chatheads in chatinfo){
+
+    for( var chatheads in wholeChats){
         let temp = {}
         db.collection('userinfo').doc(chatheads).get().then((chatheadInfo) => {
           temp.avatarURL = chatheadInfo.data().avatarURL
         })
-        temp.ukey = name+chatheads
-        temp.username = chatheads
-        var arrayOfChat = chatinfo[chatheads]
+        var arrayOfChat = wholeChats[chatheads]
         arrayOfChat.sort(function(a,b){
           return a.time - b.time
         })
         arrayOfChat.reverse()
-        temp.last_message = arrayOfChat[0].text
-        temp.last_tick = arrayOfChat[0].seen
-        temp.last_message_type = arrayOfChat[0].type
-        temp.last_chat_time = arrayOfChat[0].time
-        temp.unread_count = 0
-        for (var i = 0; i < usersInfo.length; i++) {
-          if (usersInfo[i].username === chatheads) {
-            temp.avatarURL = usersInfo[i].avatarURL
+        if (arrayOfChat.length > 0) {
+          temp.ukey = name+chatheads
+          temp.username = chatheads
+          temp.last_message = arrayOfChat[0].text
+          temp.last_tick = arrayOfChat[0].seen
+          temp.last_message_type = arrayOfChat[0].type
+          temp.last_chat_time = arrayOfChat[0].time
+          temp.unread_count = 0
+          for (var i = 0; i < usersInfo.length; i++) {
+            if (usersInfo[i].username === chatheads) {
+              temp.avatarURL = usersInfo[i].avatarURL
+            }
           }
+          setChats((prevChats) => [...prevChats,temp])
         }
-        setChats((prevChats) => [...prevChats,temp])
       }
-    })
-  },[])
+  },[wholeChats])
+
 
   const showAvatar = (url) => {
     setAvatarURl(url)
     setShowAvatarBox(true)
   }
 
+  const addChat = () => {
+    navigation.navigate('NewChat')
+  }
+
 
   return (
     <View style={{ flex: 1 }}>
     <Header />
+    <TouchableOpacity style={styles.newChat} onPress={addChat}>
+      <Ionicons name="ios-chatboxes" size={30} color="white" style={{alignSelf: 'center'}} />
+
+    </TouchableOpacity>
     <Text>{auth.currentUser.email}</Text>
     <Modal
       animationType="fade"
@@ -152,6 +165,21 @@ function ChatScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  newChat: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    margin: 15,
+    height: 60,
+    width: 60,
+    borderWidth: 1,
+    borderColor: 'green',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 50,
+    backgroundColor: "#075e55",
+    zIndex: 100,
+  },
   chat: {
     // backgroundColor: 'white',
     borderColor: 'lightgrey',

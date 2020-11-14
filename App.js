@@ -17,6 +17,8 @@ import ChatScreen from './Screens/Chat'
 import HomeScreen from './Screens/Home'
 import SettingsScreen from './Screens/Settings'
 
+console.disableYellowBox = true;
+
 const Tab = createBottomTabNavigator();
 
 export default function App() {
@@ -28,7 +30,7 @@ export default function App() {
     auth.onAuthStateChanged((authuser) => {
       if(authuser){
         // user logged in
-        console.log(authuser.email);
+        console.log(authuser.displayName);
         setUser(authuser)
       }
       else{

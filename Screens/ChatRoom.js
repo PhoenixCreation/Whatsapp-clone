@@ -1,14 +1,17 @@
-import React, { useState,useEffect} from 'react'
+import React, { useState,useEffect,useContext} from 'react'
 import firebase from 'firebase'
 import { Text, View, Button, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal} from 'react-native';
 import ChatHeader from '../Components/ChatHeader'
 import { db, auth } from "../firebaseWrap"
+import {ChatContext} from '../stateManager'
 import { FontAwesome,Entypo,MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 
 function ChatRoomScreen({ route, navigation }) {
 
   var scrollview = React.useRef(null)
+
+  const [wholeChats,setWholeChats] = useContext(ChatContext)
 
 
 
@@ -31,29 +34,36 @@ function ChatRoomScreen({ route, navigation }) {
   },[msg])
 
   useEffect(() => {
-    let temp = [];
-    let sent_op = ['true','false','true']
-    let type_op = ['text','image','video','document']
-    let text_op =[
-      "Some random message....",
-      "Some random message.... and very long for text wrap solution checking",
-      "very sort",
-      "Some random message....",
-    ]
-    for (var i = 0; i < 30 ; i++) {
-      let tempMsg = {
-        uid: i,
-        sent: sent_op[Math.floor(Math.random() * 2)],
-        type: type_op[0],
-        text: text_op[Math.floor(Math.random() * 4)],
-        attachment: {},
-        time: Math.floor(Math.random() * 12) + ":" + Math.floor(Math.random() * 30) + "pm",
-        seen: "✔️"
+    scrollview.current.scrollToEnd({ animated: false})
+  },[messages])
+
+  useEffect(() => {
+    setMessages([])
+    let current = auth.currentUser.displayName
+    let tempMsges = []
+    let tm = wholeChats[route.params.username]
+    tm.reverse()
+      for (var i = 0; i < tm.length; i++) {
+        let temp = {}
+        temp.uid = tm[i].uid
+        temp.type = tm[i].type
+        temp.text = tm[i].text
+        temp.attachment = tm[i].attachment
+        if (tm[i].sender === current) {
+          temp.sent = 'true'
+        } else {
+          temp.sent = 'false'
+        }
+        temp.seen = tm[i].seen
+        temp.time = tm[i].time
+        tempMsges.push(temp)
       }
-      temp.push(tempMsg)
-      setMessages(temp)
-    }
-  },[])
+      setMessages(tempMsges)
+      scrollview.current.scrollToEnd({ animated: false})
+
+  },[wholeChats,route.params.username])
+
+
 
   const sendMsg = () => {
     if(!cameraVisible){
@@ -61,9 +71,6 @@ function ChatRoomScreen({ route, navigation }) {
       // TODO: 1. append message to self 2. append message to reciever
       // 1. append message to self
       let sender = auth.currentUser.displayName
-      if(!sender){
-        sender = "Zeel"
-      }
       let reciever = route.params.username
       db.collection('chats').doc(sender).update({
         [reciever]: firebase.firestore.FieldValue.arrayUnion({
@@ -88,9 +95,9 @@ function ChatRoomScreen({ route, navigation }) {
           type: "text",
           text: msg,
           seen: "✔️",
+        })
       })
-
-    })
+      setMsg("")
   }
 }
 
@@ -102,7 +109,7 @@ function ChatRoomScreen({ route, navigation }) {
         <View style={styles.message__sent}>
           <Text style={{fontSize: 15}}>{message.text}</Text>
           <View style={{flex:1, flexDirection: "row", alignItems: 'flex-end', }}>
-            <Text style={{flex: 1, textAlign: 'right', fontSize: 12, color: 'grey'}}>{message.time}</Text>
+            <Text style={{flex: 1, textAlign: 'right', fontSize: 12, color: 'grey'}}>{new Date(message.time).getHours() + " : " + new Date(message.time).getMinutes()}</Text>
             <Text style={{fontSize: 12, color: 'grey'}}>{message.seen}</Text>
           </View>
         </View>
@@ -111,7 +118,7 @@ function ChatRoomScreen({ route, navigation }) {
       return (
         <View style={styles.message__recieve}>
         <Text style={{fontSize: 15}}>{message.text}</Text>
-        <Text style={{fontSize: 12, color: 'grey'}}>{message.time}</Text>
+        <Text style={{fontSize: 12, color: 'grey'}}>{new Date(message.time).getHours() + " : " + new Date(message.time).getMinutes()}</Text>
 
         </View>
       );
@@ -124,7 +131,7 @@ function ChatRoomScreen({ route, navigation }) {
     <View style={{ flex: 1, backgroundColor: "#eee5dd" }}>
 
       <ChatHeader name={route.params.username} lastseen="two days ago" avatarURL={route.params.avatarURL} navigation={navigation}/>
-      <ScrollView ref={scrollview}>
+      <ScrollView ref={scrollview} style={{marginTop: 15}}>
         {
           messages.map((message) => (
             <View key={message.uid} style={styles.message}>
