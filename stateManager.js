@@ -10,11 +10,16 @@ export const ChatProvider = (props) => {
   useEffect(() => {
     let name = auth.currentUser.displayName
 
+
+    if(name){
+
     db.collection('chats').doc(name).onSnapshot((doc) => {
       setWholeChats(doc.data())
-    })
+    },
+    (error) => {console.log(error)})
+  }
 
-  },[])
+  },[auth.currentUser.displayName])
 
   return (
     <ChatContext.Provider value={[wholeChats,setWholeChats]}>

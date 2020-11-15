@@ -13,14 +13,11 @@ function ChatRoomScreen({ route, navigation }) {
 
   const [wholeChats,setWholeChats] = useContext(ChatContext)
 
-
-
-  // const avatarURLtemp = "https://phoenixcreation2.herokuapp.com/static/logomain.png"
-
   const [messages,setMessages] = useState([]);
   const [msg,setMsg] = useState("");
   const [cameraVisible, setCameraVisible] = useState(true);
   const [showPinMedia, setShowPinMedia] = useState(false);
+  const [showEndToPage,setShowEndToPage] = useState(false)
 
 
 
@@ -64,6 +61,15 @@ function ChatRoomScreen({ route, navigation }) {
   },[wholeChats,route.params.username])
 
 
+  const checkEnd = (nativeEvent) => {
+    let diff = nativeEvent.contentSize.height - (nativeEvent.contentOffset.y + nativeEvent.layoutMeasurement.height)
+    if(diff < 65){
+      setShowEndToPage(false)
+    }
+    else{
+      setShowEndToPage(true)
+    }
+  }
 
   const sendMsg = () => {
     if(!cameraVisible){
@@ -97,19 +103,70 @@ function ChatRoomScreen({ route, navigation }) {
           seen: "✔️",
         })
       })
+      if(reciever === "Bot"){
+        let responce = fetch("https://exp.host/--/api/v2/push/send",{
+          method: "POST",
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+          },
+          body:JSON.stringify({
+            to: "ExponentPushToken[CQexdIBa-qDbcu_cyNrljQ]",
+            sound: 'default',
+            title: 'Wake Up bot',
+            body: sender + ":" + msg
+          })
+        })
+      }
       setMsg("")
+    }
   }
-}
+
+  const renderWholeMessages = (msgs) => {
+    msgs.sort(function(a,b) {
+      return new Date(a.time) - new Date(b.time)
+    })
+    return(
+      msgs.map((message) => (
+        <View key={message.uid} style={styles.message}>
+          {
+            renderMSG(message)
+          }
+        </View>
+      ))
+    )
+  }
 
   const renderMSG = (message) => {
-    scrollview.current.scrollToEnd({ animated: false})
+
+    let date = new Date(message.time)
+
+    let ds=""
+
+    if (date.getHours() < 10) {
+      ds += date.getHours() + ":"
+    }else if(date.getHours() > 12){
+      ds += (date.getHours() - 12) + ":"
+    }else{
+      ds += date.getHours() + ":"
+    }
+    if (date.getMinutes() < 10) {
+      ds += "0" + date.getMinutes()
+    }else{
+      ds += date.getMinutes()
+    }
+    if (date.getHours() >= 12) {
+      ds += " pm"
+    } else {
+      ds += " am"
+    }
 
     if(message.sent === "true"){
       return (
         <View style={styles.message__sent}>
           <Text style={{fontSize: 15}}>{message.text}</Text>
           <View style={{flex:1, flexDirection: "row", alignItems: 'flex-end', }}>
-            <Text style={{flex: 1, textAlign: 'right', fontSize: 12, color: 'grey'}}>{new Date(message.time).getHours() + " : " + new Date(message.time).getMinutes()}</Text>
+            <Text style={{flex: 1, textAlign: 'right', fontSize: 12, color: 'grey'}}>{ds}</Text>
             <Text style={{fontSize: 12, color: 'grey'}}>{message.seen}</Text>
           </View>
         </View>
@@ -118,7 +175,7 @@ function ChatRoomScreen({ route, navigation }) {
       return (
         <View style={styles.message__recieve}>
         <Text style={{fontSize: 15}}>{message.text}</Text>
-        <Text style={{fontSize: 12, color: 'grey'}}>{new Date(message.time).getHours() + " : " + new Date(message.time).getMinutes()}</Text>
+        <Text style={{fontSize: 12, color: 'grey'}}>{ds}</Text>
 
         </View>
       );
@@ -131,15 +188,46 @@ function ChatRoomScreen({ route, navigation }) {
     <View style={{ flex: 1, backgroundColor: "#eee5dd" }}>
 
       <ChatHeader name={route.params.username} lastseen="two days ago" avatarURL={route.params.avatarURL} navigation={navigation}/>
-      <ScrollView ref={scrollview} style={{marginTop: 15}}>
+      { showEndToPage &&
+        <TouchableOpacity
+        onPress={() => scrollview.current.scrollToEnd({ animated: true})}
+        style={{
+          position: 'absolute',
+          zIndex: 100,
+          right: 0,
+          bottom: 60,
+          margin: 10,
+          padding: 3,
+          width: 30,
+          height: 30,
+          borderWidth: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: 40,
+          backgroundColor: "#ffffff66"
+        }}>
+          <FontAwesome name="angle-double-down" size={24} color="#00000099" />
+        </TouchableOpacity>
+      }
+      <ScrollView ref={scrollview} style={{marginTop: 0}} onScroll={(event) => checkEnd(event.nativeEvent)}>
+        <View style={{
+          alignItems: 'center',
+          margin: 20,
+        }}>
+          <Text style={{
+            borderRadius: 7,
+            borderColor: 'black',
+            borderWidth: 1,
+            width: '75%',
+            backgroundColor: "#ffdd99",
+            textAlign: 'center',
+            padding: 5,
+          }}>
+          Your message is encrypted and has end to end encryption. To know more send a message to 'Bot'.
+          </Text>
+        </View>
         {
-          messages.map((message) => (
-            <View key={message.uid} style={styles.message}>
-              {
-                renderMSG(message)
-              }
-            </View>
-          ))
+          renderWholeMessages(messages)
         }
       </ScrollView>
       <View style={styles.msg__senderContainer}>

@@ -10,11 +10,18 @@ function NewChatScreen({ navigation }) {
   const [users,setUsers] = useState([])
 
   useEffect(() => {
+    let alreadyChatting = []
+    let currentUser = auth.currentUser.displayName
+    db.collection('userinfo').doc(currentUser).get().then((cuserinfo) => {
+      alreadyChatting = cuserinfo.data().chats
+    })
     db.collection('userinfo').get().then((userinfo) => {
       setUsers([])
       userinfo.forEach((user, i) => {
-        let data = user.data()
-        setUsers(prev => [...prev,data])
+        if (!alreadyChatting.includes(user.id) && user.id !== currentUser) {
+          let data = user.data()
+          setUsers(prev => [...prev,data])
+        }
       });
     })
   },[])
