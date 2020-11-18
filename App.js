@@ -8,10 +8,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import SigninScreen from './Components/Signin'
 import SignupScreen from './Components/Signup'
 
-//// TEMP: inputs Remove till next comment...
-import ChatScreen from './Screens/Chat'
+import InfoScreen from './Screens/Info'
 
-// TEMP: Remove all above imports...
 
 
 import HomeScreen from './Screens/Home'
@@ -120,13 +118,13 @@ export default function App() {
             let iconName;
 
             if (route.name === 'Home') {
-              iconName = focused ? 'ios-information-circle' : 'ios-information-circle-outline';
+              iconName = focused ? 'ios-chatboxes' : 'ios-home';
 
             } else if (route.name === 'Status') {
               iconName = focused ? 'ios-list-box' : 'ios-list';
 
-            } else if (route.name === 'Calls') {
-              iconName = focused ? 'ios-list-box' : 'ios-list';
+            } else if (route.name === 'Info') {
+              iconName = focused ? 'ios-information-circle' : 'ios-information-circle-outline';
 
             }
 
@@ -141,7 +139,7 @@ export default function App() {
         >
         <Tab.Screen name="Home" component={HomeScreen} options={({ route }) => ({tabBarVisible: getTabBarVisibility(route)})}/>
         <Tab.Screen name="Status" component={SettingsScreen} />
-        <Tab.Screen name="Calls" component={ChatScreen} />
+        <Tab.Screen name="Info" component={InfoScreen} />
         {/* If you add here then also add in above icon function.....*/}
         </Tab.Navigator>
         </NavigationContainer>

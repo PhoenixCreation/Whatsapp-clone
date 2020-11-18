@@ -1,5 +1,5 @@
 import React,{ useEffect, useState} from 'react'
-import { Text, View, Button, StyleSheet, TextInput, ToastAndroid } from 'react-native';
+import { Text, View, Button, StyleSheet, TextInput, ToastAndroid, Platform } from 'react-native';
 import { auth } from '../firebaseWrap'
 
 
@@ -9,15 +9,26 @@ function SigninScreen({ navigation }) {
 
   var signIn = () => {
     if(email === null || email === "" || password === null || password === ""){
-      ToastAndroid.show("Please enter details", ToastAndroid.SHORT)
+      if(Platform.os !== 'web'){
+
+        // ToastAndroid.show("Please enter details", ToastAndroid.SHORT)
+      }
 
     }
     else{
-      ToastAndroid.show("Signinng in.....", ToastAndroid.SHORT)
+      if(Platform.os !== 'web'){
+
+        // ToastAndroid.show("Signinng in.....", ToastAndroid.SHORT)
+      }
+
       auth.signInWithEmailAndPassword(email,password)
         .catch(function(error){
           console.log(error);
-          ToastAndroid.show("something went wrong..", ToastAndroid.SHORT)
+          if(Platform.os !== 'web'){
+
+            // ToastAndroid.show("something went wrong..", ToastAndroid.SHORT)
+          }
+
         })
     }
   }

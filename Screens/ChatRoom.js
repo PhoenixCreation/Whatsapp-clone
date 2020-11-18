@@ -5,6 +5,7 @@ import ChatHeader from '../Components/ChatHeader'
 import { db, auth } from "../firebaseWrap"
 import {ChatContext} from '../stateManager'
 import { FontAwesome,Entypo,MaterialIcons, Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
 
 function ChatRoomScreen({ route, navigation }) {
@@ -81,7 +82,7 @@ function ChatRoomScreen({ route, navigation }) {
       db.collection('chats').doc(sender).update({
         [reciever]: firebase.firestore.FieldValue.arrayUnion({
           time: new Date().toUTCString(),
-          uid: sender + "_" + reciever + "_" + Math.floor(Math.random() * 100000 + 1),
+          uid: sender + "_" + reciever + "_" + messages.length,
           attachment: "",
           sender: sender,
           reciever: reciever,
@@ -94,7 +95,7 @@ function ChatRoomScreen({ route, navigation }) {
       db.collection('chats').doc(reciever).update({
           [sender]: firebase.firestore.FieldValue.arrayUnion({
           time: new Date().toUTCString(),
-          uid: sender + "_" + reciever + "_" + Math.floor(Math.random() * 100000 + 1),
+          uid: sender + "_" + reciever + "_" + messages.length,
           attachment: "",
           sender: sender,
           reciever: reciever,
@@ -104,18 +105,17 @@ function ChatRoomScreen({ route, navigation }) {
         })
       })
       if(reciever === "Bot"){
-        let responce = fetch("https://exp.host/--/api/v2/push/send",{
-          method: "POST",
-          headers: {
-            accept: 'application/json',
-            'content-type': 'application/json',
-          },
-          body:JSON.stringify({
-            to: "ExponentPushToken[CQexdIBa-qDbcu_cyNrljQ]",
-            sound: 'default',
-            title: 'Wake Up bot',
-            body: sender + ":" + msg
-          })
+        axios.post('https://exp.host/--/api/v2/push/send',{
+              to: "ExponentPushToken[CQexdIBa-qDbcu_cyNrljQ]",
+              sound: 'default',
+              title: 'Wake Up bot',
+              body: sender + ":" + msg
+        })
+        .then(function (res){
+          console.log(res);
+        })
+        .catch(function (er){
+          console.log(er);
         })
       }
       setMsg("")
