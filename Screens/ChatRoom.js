@@ -1,6 +1,6 @@
 import React, { useState,useEffect,useContext} from 'react'
 import firebase from 'firebase'
-import { Text, View, Button, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal} from 'react-native';
+import { Text, View, Button, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, ToastAndroid} from 'react-native';
 import ChatHeader from '../Components/ChatHeader'
 import { db, auth } from "../firebaseWrap"
 import {ChatContext} from '../stateManager'
@@ -113,9 +113,12 @@ function ChatRoomScreen({ route, navigation }) {
         })
         .then(function (res){
           console.log(res);
+          ToastAndroid.show(res.status.toString(),ToastAndroid.SHORT)
+
         })
         .catch(function (er){
           console.log(er);
+          ToastAndroid.show("Something went wrong... notification didn't send",ToastAndroid.SHORT)
         })
       }
       setMsg("")

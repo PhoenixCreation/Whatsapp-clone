@@ -14,7 +14,7 @@ function SignupScreen({ navigation }) {
   const [imageObj,setImageObj] = useState(null)
   const [nameBorderColor, setNameBorderColor] = useState('red')
   const [ntoken,setNtoken] = useState("")
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(true);
   const toggleSwitch = () => setIsEnabled(previousState => !previousState);
 
 
@@ -82,6 +82,8 @@ function SignupScreen({ navigation }) {
       ToastAndroid.show("Please enter details..",ToastAndroid.SHORT)
     }else if(nameBorderColor === "red"){
       ToastAndroid.show("Username is already taken..",ToastAndroid.SHORT)
+    }else if(imageObj === null){
+      ToastAndroid.show("You have to provide profile Image",ToastAndroid.SHORT)
     }
     else{
       ToastAndroid.show("Creating account...",ToastAndroid.SHORT)

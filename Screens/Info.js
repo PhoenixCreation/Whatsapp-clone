@@ -1,5 +1,6 @@
 import React from 'react'
 import { Text, View, Button, StatusBar, StyleSheet, Image, ScrollView } from 'react-native';
+import * as Linking from 'expo-linking';
 
 var DevInfo = ({imageURI, name, description, tagline}) => {
   return (
@@ -28,6 +29,11 @@ var DevInfo = ({imageURI, name, description, tagline}) => {
 
 
 function InfoScreen({ navigation }) {
+
+  const _handlePress = () => {
+   Linking.openURL("https://phoenixcreation2.herokuapp.com");
+ };
+
   return (
     <ScrollView>
     <View style={styles.info__container}>
@@ -35,7 +41,7 @@ function InfoScreen({ navigation }) {
         <Text style={{ fontSize: 25, fontWeight: 'bold', alignSelf: 'center', marginBottom: 10}}>Copyright</Text>
         <Text style={{ textAlign: 'justify', fontSize: 16, color: 'black'}}>We hearby declare that we do not claim any of the whatsapp styling.
         Also this is completely for educational purpose and does not conatin any purpose of corporative distribution.
-        All rights reserved to PhoenixCreation if there is any rights!
+        All rights reserved to <Text onPress={_handlePress} style={{ color: 'blue'}}>PhoenixCreation</Text> if there is any rights!
         </Text>
       </View>
       <View style={styles.info__devs }>
@@ -52,6 +58,17 @@ function InfoScreen({ navigation }) {
           description="A master in finding problems related to privacy and security. Security expert for this app. A person with different vision then whole world."
           tagline="Your worse is mine best and your data is also mine! 😜 🤣  "
         />
+      </View>
+      {/*
+        // TODO: Add linkings for support.
+        // A good support gives better and broader user base
+
+        */}
+      <View>
+        <Text>For any type of query click below links:</Text>
+        <Text>1. Message "Bot". He will reply soon.</Text>
+        <Text>2. Open issue on Github.</Text>
+        <Text>3. Contact any of the developers personally.</Text>
       </View>
     </View>
     </ScrollView>
