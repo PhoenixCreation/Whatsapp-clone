@@ -66,7 +66,6 @@ function SignupScreen({ navigation }) {
       quality: 1,
     });
 
-    console.log(result);
 
     if (!result.cancelled) {
       let blob = await fetch(result.uri).then(r => r.blob());

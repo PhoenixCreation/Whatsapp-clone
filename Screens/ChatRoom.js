@@ -1,12 +1,15 @@
 import React, { useState,useEffect,useContext} from 'react'
 import firebase from 'firebase'
-import { Text, View, Button, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, ToastAndroid} from 'react-native';
+import { Dimensions, Text, View, Button, Image, StyleSheet, ScrollView, TouchableOpacity, Platform, TextInput, Modal, ToastAndroid} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import ChatHeader from '../Components/ChatHeader'
-import { db, auth } from "../firebaseWrap"
+import { db, auth, storage } from "../firebaseWrap"
 import {ChatContext} from '../stateManager'
 import { FontAwesome,Entypo,MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 function ChatRoomScreen({ route, navigation }) {
 
@@ -19,9 +22,23 @@ function ChatRoomScreen({ route, navigation }) {
   const [cameraVisible, setCameraVisible] = useState(true);
   const [showPinMedia, setShowPinMedia] = useState(false);
   const [showEndToPage,setShowEndToPage] = useState(false)
+  const [showImageSlider, setShowImageSlider] = useState(false)
+  const [image, setImage] = useState(null)
+  const [attachmentLink, setAttachmentLink] = useState("")
+  const [showCurrentImage,setShowCurrentImage] = useState(null)
+  const [imageUploading, setImageUploading] = useState(false)
 
 
-
+  useEffect(() => {
+      (async () => {
+        if (Platform.OS !== 'web') {
+          const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
+          if (status !== 'granted') {
+            alert('Sorry, we need camera roll permissions to make this work!');
+          }
+        }
+      })();
+  }, []);
 
   useEffect(() => {
     if(msg === null || msg === ""){
@@ -61,6 +78,42 @@ function ChatRoomScreen({ route, navigation }) {
 
   },[wholeChats,route.params.username])
 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.5,
+    });
+
+    console.log(result);
+
+    if (!result.cancelled) {
+      let blob = await fetch(result.uri).then(r => r.blob());
+      setImage(result.uri);
+      let rand = Math.floor(Math.random() * 10000)
+      const uploadTask = storage.ref(`${auth.currentUser.displayName}/${rand}`).put(blob)
+      setImageUploading(true)
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          console.log(snapshot.bytesTransferred / snapshot.totalBytes );
+        },
+        (error) => {console.log(error)},
+        () => {
+          storage
+            .ref(`${auth.currentUser.displayName}`)
+            .child(`${rand}`)
+            .getDownloadURL()
+            .then((url) => {
+              setShowPinMedia(false)
+              ToastAndroid.show("Done uploading",ToastAndroid.SHORT)
+              setAttachmentLink(url)
+              setImageUploading(false)
+            })
+
+        }
+      )
+    }
+  };
 
   const checkEnd = (nativeEvent) => {
     let diff = nativeEvent.contentSize.height - (nativeEvent.contentOffset.y + nativeEvent.layoutMeasurement.height)
@@ -74,55 +127,110 @@ function ChatRoomScreen({ route, navigation }) {
 
   const sendMsg = () => {
     if(!cameraVisible){
-      //send message.....
-      // TODO: 1. append message to self 2. append message to reciever
-      // 1. append message to self
-      let sender = auth.currentUser.displayName
-      let reciever = route.params.username
-      db.collection('chats').doc(sender).update({
-        [reciever]: firebase.firestore.FieldValue.arrayUnion({
-          time: new Date().toUTCString(),
-          uid: sender + "_" + reciever + "_" + messages.length,
-          attachment: "",
-          sender: sender,
-          reciever: reciever,
-          type: "text",
-          text: msg,
-          seen: "✔️",
-        })
-      })
-      // 2. append message to reciever
-      db.collection('chats').doc(reciever).update({
-          [sender]: firebase.firestore.FieldValue.arrayUnion({
-          time: new Date().toUTCString(),
-          uid: sender + "_" + reciever + "_" + messages.length,
-          attachment: "",
-          sender: sender,
-          reciever: reciever,
-          type: "text",
-          text: msg,
-          seen: "✔️",
-        })
-      })
-      if(reciever === "Bot"){
-        axios.post('https://exp.host/--/api/v2/push/send',{
-              to: "ExponentPushToken[CQexdIBa-qDbcu_cyNrljQ]",
-              sound: 'default',
-              title: 'Wake Up bot',
-              body: sender + ":" + msg
-        })
-        .then(function (res){
-          console.log(res);
-          ToastAndroid.show(res.status.toString(),ToastAndroid.SHORT)
+      if (attachmentLink !== "") {
 
+        //send message.....
+        // TODO: 1. append message to self 2. append message to reciever
+        // 1. append message to self
+        let sender = auth.currentUser.displayName
+        let reciever = route.params.username
+        db.collection('chats').doc(sender).update({
+          [reciever]: firebase.firestore.FieldValue.arrayUnion({
+            time: new Date().toUTCString(),
+            uid: sender + "_" + reciever + "_" + messages.length,
+            attachment: attachmentLink,
+            sender: sender,
+            reciever: reciever,
+            type: "image",
+            text: msg,
+            seen: "✔️",
+          })
         })
-        .catch(function (er){
-          console.log(er);
-          ToastAndroid.show("Something went wrong... notification didn't send",ToastAndroid.SHORT)
+        // 2. append message to reciever
+        db.collection('chats').doc(reciever).update({
+          [sender]: firebase.firestore.FieldValue.arrayUnion({
+            time: new Date().toUTCString(),
+            uid: sender + "_" + reciever + "_" + messages.length,
+            attachment: attachmentLink,
+            sender: sender,
+            reciever: reciever,
+            type: "image",
+            text: msg,
+            seen: "✔️",
+          })
         })
+
+        if(reciever === "Bot"){
+          axios.post('https://exp.host/--/api/v2/push/send',{
+            to: "ExponentPushToken[CQexdIBa-qDbcu_cyNrljQ]",
+            sound: 'default',
+            title: 'Wake Up bot',
+            body: sender + ":" + msg
+          })
+          .then(function (res){
+            ToastAndroid.show(res.status.toString(),ToastAndroid.SHORT)
+
+          })
+          .catch(function (er){
+            console.log(er);
+            ToastAndroid.show("Something went wrong... notification didn't send",ToastAndroid.SHORT)
+          })
+        }
+        setMsg("")
+      } else {
+
+        //send message.....
+        // TODO: 1. append message to self 2. append message to reciever
+        // 1. append message to self
+        let sender = auth.currentUser.displayName
+        let reciever = route.params.username
+        db.collection('chats').doc(sender).update({
+          [reciever]: firebase.firestore.FieldValue.arrayUnion({
+            time: new Date().toUTCString(),
+            uid: sender + "_" + reciever + "_" + messages.length,
+            attachment: attachmentLink,
+            sender: sender,
+            reciever: reciever,
+            type: "text",
+            text: msg,
+            seen: "✔️",
+          })
+        })
+        // 2. append message to reciever
+        db.collection('chats').doc(reciever).update({
+          [sender]: firebase.firestore.FieldValue.arrayUnion({
+            time: new Date().toUTCString(),
+            uid: sender + "_" + reciever + "_" + messages.length,
+            attachment: attachmentLink,
+            sender: sender,
+            reciever: reciever,
+            type: "text",
+            text: msg,
+            seen: "✔️",
+          })
+        })
+        if(reciever === "Bot"){
+          axios.post('https://exp.host/--/api/v2/push/send',{
+            to: "ExponentPushToken[CQexdIBa-qDbcu_cyNrljQ]",
+            sound: 'default',
+            title: 'Wake Up bot',
+            body: sender + ":" + msg
+          })
+          .then(function (res){
+            console.log(res);
+            ToastAndroid.show(res.status.toString(),ToastAndroid.SHORT)
+
+          })
+          .catch(function (er){
+            console.log(er);
+            ToastAndroid.show("Something went wrong... notification didn't send",ToastAndroid.SHORT)
+          })
+        }
+        setMsg("")
       }
-      setMsg("")
     }
+    setImage(null)
+    setAttachmentLink("")
   }
 
   const renderWholeMessages = (msgs) => {
@@ -162,6 +270,50 @@ function ChatRoomScreen({ route, navigation }) {
       ds += " pm"
     } else {
       ds += " am"
+    }
+
+    if (message.type === "image") {
+      if(message.sent === "true"){
+        return (
+          <View style={styles.message__sent}>
+          <TouchableOpacity style={styles.msg__imageClicker} onPress={() => {
+            setShowCurrentImage(message.attachment)
+            setShowImageSlider(true)
+          }}>
+            <Image
+              source={{ uri: message.attachment}}
+              style={styles.msg__image}
+
+            />
+            </TouchableOpacity>
+            <Text style={{fontSize: 15}}>{message.text}</Text>
+            <View style={{flex:1, flexDirection: "row", alignItems: 'flex-end', }}>
+              <Text style={{flex: 1, textAlign: 'right', fontSize: 12, color: 'grey'}}>{ds}</Text>
+              <Text style={{fontSize: 12, color: 'grey'}}>{message.seen}</Text>
+            </View>
+          </View>
+        );
+      }else{
+        return (
+          <View style={styles.message__recieve}>
+          <TouchableOpacity style={styles.msg__imageClicker} onPress={() => {
+            setShowCurrentImage(message.attachment)
+            setShowImageSlider(true)
+
+          }}>
+
+          <Image
+            source={{ uri: message.attachment}}
+            style={styles.msg__image}
+
+          />
+          </TouchableOpacity>
+          <Text style={{fontSize: 15}}>{message.text}</Text>
+          <Text style={{fontSize: 12, color: 'grey'}}>{ds}</Text>
+
+          </View>
+        );
+      }
     }
 
     if(message.sent === "true"){
@@ -233,6 +385,8 @@ function ChatRoomScreen({ route, navigation }) {
           renderWholeMessages(messages)
         }
       </ScrollView>
+      {image && <Image source={{ uri: image }} style={{ width: 100, height: 100}} />}
+
       <View style={styles.msg__senderContainer}>
         <View style={styles.msg__senderMain}>
           <TouchableOpacity>
@@ -248,6 +402,7 @@ function ChatRoomScreen({ route, navigation }) {
           <TouchableOpacity onPress={() => setShowPinMedia(true)}>
             <FontAwesome name="paperclip" size={24} color="grey" style={{marginLeft: 4, marginRight: 15}} />
           </TouchableOpacity>
+          {/*  Pin media Model*/}
           <Modal
             animationType="slide"
             visible={showPinMedia}
@@ -262,8 +417,19 @@ function ChatRoomScreen({ route, navigation }) {
                 style={{ position: 'absolute', top: 0,left: 0,right:0,bottom:0}}
               >
               </TouchableOpacity>
-              <PinMedia />
+              <PinMedia pickImage={pickImage} isLoading={imageUploading}/>
             </View>
+          </Modal>
+          {/*  Image Slider Model*/}
+          <Modal
+            animationType="fade"
+            visible={showImageSlider}
+            transparent={true}
+            onRequestClose={() => {
+              setShowImageSlider(false)
+            }}
+          >
+              <ImageSlider imageURI={showCurrentImage} onBack={() => setShowImageSlider(false)} name={route.params.username} />
           </Modal>
           { cameraVisible && <TouchableOpacity>
             <Entypo name="camera" size={24} color="grey" style={{marginRight: 10, marginLeft: 10}}/>
@@ -287,7 +453,7 @@ function ChatRoomScreen({ route, navigation }) {
   );
 }
 
-const PinMedia = () => {
+const PinMedia = ({ pickImage, isLoading }) => {
   return (
     <View style={{
         marginBottom: 55,
@@ -299,6 +465,7 @@ const PinMedia = () => {
         marginLeft: 10,
         marginRight: 10,
       }}>
+      { isLoading && <View><Text>Image is uploading....</Text></View>}
       <View style={{ flexDirection: "row", justifyContent: 'space-around', alignItems: 'center', flex: 1}}>
         <View style={{ justifyContent: 'center', alignItems: 'center'}}>
           <TouchableOpacity style={{ padding: 15, backgroundColor: '#6065cd', borderRadius: 50,}}>
@@ -315,7 +482,7 @@ const PinMedia = () => {
           <Text>Camera</Text>
         </View>
         <View style={{ justifyContent: 'center', alignItems: 'center'}}>
-          <TouchableOpacity style={{ padding: 15, backgroundColor: '#b953cf', borderRadius: 50,}}>
+          <TouchableOpacity onPress={ pickImage } style={{ padding: 15, backgroundColor: '#b953cf', borderRadius: 50,}}>
             <FontAwesome name="photo" size={24} color="white"  />
 
           </TouchableOpacity>
@@ -345,6 +512,41 @@ const PinMedia = () => {
           <Text>Contact</Text>
         </View>
       </View>
+    </View>
+  );
+}
+
+const ImageSlider = ({imageURI, onBack, name}) => {
+  return (
+    <View style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "lightgrey",
+
+    }}>
+      <View style={{
+        flexDirection: "row",
+        backgroundColor: "#888c",
+        alignItems: "center",
+
+      }}>
+        <TouchableOpacity onPress={onBack}>
+          <Ionicons name="ios-arrow-round-back" size={30} color="white" style={{ margin: 5, padding: 10}} />
+        </TouchableOpacity>
+        <Text
+          style={{
+            color: "white",
+            fontSize: 21,
+          }}
+        >{name}</Text>
+      </View>
+      <Image
+        source={{ uri: imageURI}}
+        style={{ width: windowWidth, height: windowHeight, resizeMode: "contain", position: "absolute", zIndex: -1}}
+      />
     </View>
   );
 }
@@ -431,6 +633,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 10,
     maxHeight: 50,
+  },
+  msg__image: {
+    flex:1,
+    width: 200,
+    height: 200,
+    resizeMode: "cover",
+    borderWidth: 1.5,
+    borderColor: "black",
+    borderRadius: 5,
+    margin: 5,
+
+  },
+  msg__imageClicker:{
+    width: 210,
+    height: 210,
   }
 })
 
